@@ -1,0 +1,212 @@
+import maya.cmds as cmds
+import alembic.Abc
+import os
+
+cmds.SetProject()
+
+res = []
+propres = []
+setres = []
+chares = []
+sqres = []
+refObj = []
+setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
+prop_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/prop"
+set_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/set"
+char_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/character"
+sequence_path = cmds.workspace(fullName=True) + "/scenes/publish/sequence/lng01"
+
+def findsetAss():    
+   
+    for path in os.listdir(setPiece_path):
+    # check if current path is a file
+        if os.path.isdir(os.path.join(setPiece_path, path)):
+            res.append(path)
+    print(res)
+   
+def finpropAss():    
+   
+    for path in os.listdir(prop_path):
+    # check if current path is a file
+        if os.path.isdir(os.path.join(prop_path, path)):
+            propres.append(path)
+    print(propres)
+
+def finsetAss():    
+   
+    for path in os.listdir(set_path):
+    # check if current path is a file
+        if os.path.isdir(os.path.join(set_path, path)):
+            setres.append(path)
+    print(setres)
+
+def fincharAss():    
+   
+    for path in os.listdir(char_path):
+    # check if current path is a file
+        if os.path.isdir(os.path.join(char_path, path)):
+            chares.append(path)
+    print(chares)
+
+def findseqAss():    
+   
+    for path in os.listdir(sequence_path):
+    # check if current path is a file
+        if os.path.isdir(os.path.join(sequence_path, path)):
+            sqres.append(path)
+   
+   
+findsetAss()
+finpropAss()
+finsetAss()
+fincharAss()
+findseqAss()
+
+def referAss(assName):
+    templist = []
+    temp_path = setPiece_path + "\\" + assName + "\\model\\source\\"
+    for tpath in os.listdir(temp_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path, tpath)):
+            templist.append(tpath)
+    cmds.file(temp_path + templist[-1],  r=True)
+    print(templist)
+   
+def referpropAss(assName):
+    templist = []
+    temp_path = prop_path + "\\" + assName + "\\model\\source\\"
+    for tpath in os.listdir(temp_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path, tpath)):
+            templist.append(tpath)
+    cmds.file(temp_path + templist[-1],  r=True)
+    print(templist)
+
+def refersetAss(assName):
+    templist = []
+    temp_path = set_path + "\\" + assName + "\\model\\"
+    for tpath in os.listdir(temp_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path, tpath)):
+            templist.append(tpath)
+    cmds.file(temp_path + templist[-1],  r=True)
+    print(templist)
+   
+def refercharAss(assName):
+    templist = []
+    temp_path = char_path + "\\" + assName + "\\model\\cache\\fbx\\"
+    for tpath in os.listdir(temp_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path, tpath)):
+            templist.append(tpath)
+    cmds.file(temp_path + templist[-1],  r=True)
+    print(templist)
+
+def referseqAss(assName):
+    templist = []
+    templist2 = []
+    temp_path = sequence_path + "\\" + assName + "\\animation\\cache\\alembic\\"
+    temp_path2 = sequence_path + "\\" + assName + "\\layout\\cache\\alembic\\"
+   
+    refersetAss("loungeRoom")
+   
+    for tpath in os.listdir(temp_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path, tpath)):
+            templist.append(tpath)
+    cmds.file(temp_path + templist[-1],  r=True)
+    for tpath2 in os.listdir(temp_path2):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(temp_path2, tpath2)):
+            templist2.append(tpath2)
+    cmds.file(temp_path2 + templist2[-1],  r=True)
+    #print(templist)
+   
+def unlockNode(*args):
+    selection = cmds.ls(selection = True)
+    for node in selection:
+        cmds.lockNode(node, lock = False)
+
+
+def checkFile():
+    refNodes = cmds.ls(rf = True)
+    notinclRef = "_mRefRN"
+    for rNode in refNodes:
+        if notinclRef not in rNode:
+            refObj.append(rNode)
+    print(refObj)
+
+checkFile()
+
+if cmds.window('cTools', exists = True):
+    cmds.deleteUI('cTools')
+       
+cmds.window('cTools')
+   
+cmds.columnLayout()
+   
+cmds.separator(h=10)
+cmds.text('Load new Assets: Automatically get latest version')
+cmds.separator(h=10)
+   
+   
+setpieceMenu = cmds.optionMenu(w = 300, label='Set Piece')
+cmds.optionMenu( setpieceMenu, edit=1, changeCommand= referAss)
+cmds.menuItem( label= "None")
+   
+for item in res:      
+    cmds.menuItem( label= str(item))
+   
+cmds.separator(h=20)
+
+propMenu = cmds.optionMenu(w = 300, label='Props')
+cmds.optionMenu( propMenu, edit=1, changeCommand= referpropAss)
+cmds.menuItem( label= "None")
+for item in propres:      
+    cmds.menuItem( label= str(item))
+
+cmds.separator(h=30)          
+
+
+setMenu = cmds.optionMenu(w = 300, label='Sets')
+cmds.optionMenu( setMenu, edit=1, changeCommand= refersetAss)
+cmds.menuItem( label= "None")
+   
+for item in setres:      
+    cmds.menuItem( label= str(item))
+   
+cmds.separator(h=20)
+
+charMenu = cmds.optionMenu(w = 300, label='Char')
+cmds.optionMenu( charMenu, edit=1, changeCommand= refersetAss)
+cmds.menuItem( label= "None")
+   
+for item in chares:      
+    cmds.menuItem( label= str(item))
+   
+cmds.separator(h=20)
+
+seqMenu = cmds.optionMenu(w = 300, label='Seq')
+cmds.optionMenu( seqMenu, edit=1, changeCommand= referseqAss)
+cmds.menuItem( label= "None")
+   
+for item in sqres:      
+    cmds.menuItem( label= str(item))
+   
+cmds.separator(h=20)
+
+objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
+cmds.optionMenu( objMenu, edit=1)
+cmds.menuItem( label= "None")
+   
+for item in refObj:      
+    cmds.menuItem( label= str(item))
+   
+cmds.separator(h=20)
+
+cmds.button(label = 'Reference Asset', command = 'referAss()')
+cmds.button(label = 'unlock node', command = unlockNode)
+   
+cmds.showWindow('cTools')
+
+
