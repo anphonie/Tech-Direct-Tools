@@ -1,6 +1,8 @@
+
 import maya.cmds as cmds
-import alembic.Abc
-import os
+import math
+from mtoa.core import createStandIn
+import random
 
 cmds.SetProject()
 
@@ -10,11 +12,13 @@ setres = []
 chares = []
 sqres = []
 refObj = []
+verPath = ''
 setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
 prop_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/prop"
 set_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/set"
 char_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/character"
 sequence_path = cmds.workspace(fullName=True) + "/scenes/publish/sequence/lng01"
+dsStore = "DS_Store"
 
 def findsetAss():    
    
@@ -70,7 +74,7 @@ def referAss(assName):
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
     cmds.file(temp_path + templist[-1],  r=True)
-    print(templist)
+    #print(templist)
    
 def referpropAss(assName):
     templist = []
@@ -80,7 +84,7 @@ def referpropAss(assName):
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
     cmds.file(temp_path + templist[-1],  r=True)
-    print(templist)
+    #print(templist)
 
 def refersetAss(assName):
     templist = []
@@ -89,7 +93,8 @@ def refersetAss(assName):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
-    cmds.file(temp_path + templist[-1],  r=True)
+    tempname = templist[-1].split(".")
+    cmds.file(temp_path + templist[-1],  r=True, namespace = tempname[0] + '_' + tempname[1])
     print(templist)
    
 def refercharAss(assName):
@@ -100,7 +105,7 @@ def refercharAss(assName):
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
     cmds.file(temp_path + templist[-1],  r=True)
-    print(templist)
+    #print(templist)
 
 def referseqAss(assName):
     templist = []
@@ -114,12 +119,14 @@ def referseqAss(assName):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
-    cmds.file(temp_path + templist[-1],  r=True)
+    tempname = templist[-1].split(".")
+    cmds.file(temp_path + templist[-1],  r=True, namespace = tempname[0] + '_' + tempname[1])
     for tpath2 in os.listdir(temp_path2):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path2, tpath2)):
             templist2.append(tpath2)
-    cmds.file(temp_path2 + templist2[-1],  r=True)
+    tempname2 = templist2[-1].split(".")
+    cmds.file(temp_path2 + templist2[-1],  r=True, namespace = tempname2[0] + '_' + tempname2[1])
     #print(templist)
    
 def unlockNode(*args):
@@ -130,13 +137,59 @@ def unlockNode(*args):
 
 def checkFile():
     refNodes = cmds.ls(rf = True)
-    notinclRef = "_mRefRN"
+    notinclRef = "mRefRN"
     for rNode in refNodes:
         if notinclRef not in rNode:
             refObj.append(rNode)
     print(refObj)
 
 checkFile()
+
+def replaceRefer(*args):
+    refObj = str(cmds.ls(sl= True))
+    cmds.file(set_path + '/loungeRoom/model/loungeRoom_model.v003.mb', loadReference = 'loungeRoom_model_v002RN')
+    cmds.file(set_path + '/loungeRoom/model/loungeRoom_model.v003.mb', e=1, namespace='loungeRoom_model_v002')
+
+def verRefer(verNo):
+    refObj = str(cmds.ls(sl= True))
+    objverName = cmds.referenceQuery(selected, ns = True, shortName=True).split('_v')
+    cmds.file(verPath + verNo + '.' + 'abc', loadReference = 'lng01_010_anim_v003RN')
+    cmds.file(verPath + verNo + '.' + 'abc', e=1, namespace= objverName + 'verNo')
+
+def checkVer(*args):
+    tempverList = []
+    cVer = []
+    selected = cmds.ls(sl = True)
+    objName = cmds.referenceQuery(selected, ns = True, shortName=True).split('_')
+    if (objName[1] != 'model' ):
+        seqName = objName[0] + '_' + objName[1]
+        for sq in sqres:
+            if (sq == seqName):
+                if (objName[2] == 'anim'):
+                    temp_path2 = sequence_path + "\\" + seqName + "\\animation\\cache\\alembic\\"    
+                    verPath = temp_path2 + seqName + '_' + objName[2] + '.'                
+                    for tpath2 in os.listdir(temp_path2):
+                        if os.path.isfile(os.path.join(temp_path2, tpath2)):                            
+                            if (dsStore not in tpath2):
+                                tempverList.append(tpath2)
+                elif (objName[2] == 'layout'):
+                    temp_path2 = sequence_path + "\\" + seqName + "\\layout\\cache\\alembic\\"
+                    verPath = temp_path2 + seqName + '_' + objName[2] + '.'                    
+                    for tpath2 in os.listdir(temp_path2):
+                        if os.path.isfile(os.path.join(temp_path2, tpath2)):                            
+                            if (dsStore not in tpath2):
+                                tempverList.append(tpath2)
+    for vList in tempverList:
+        aVer = vList.split('.')
+        nVer = aVer[-2].split('v')
+        cVer.append(nVer[-1])
+       
+    cmds.optionMenu( verMenu, edit=1, changeCommand = verRefer)
+    #cmds.menuItem( label= "None")
+   
+    for item in cVer:      
+        cmds.menuItem( label= str(item))    
+    print(verPath)            
 
 if cmds.window('cTools', exists = True):
     cmds.deleteUI('cTools')
@@ -204,9 +257,9 @@ for item in refObj:
    
 cmds.separator(h=20)
 
-cmds.button(label = 'Reference Asset', command = 'referAss()')
-cmds.button(label = 'unlock node', command = unlockNode)
+cmds.button(label = 'Reference Asset', command = replaceRefer)
+cmds.separator(h=20)
+verMenu = cmds.optionMenu(w = 300, label='Seq')
+cmds.button(label = 'unlock node', command = checkVer)
    
 cmds.showWindow('cTools')
-
-
