@@ -1,78 +1,52 @@
-from operator import truediv
 import maya.cmds as cmds
-import os
+from maya.common.ui import LayoutManager
+import os.path
+import json
 global path
 global objCategory
 global seqCategory
 
-path = "C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/wip"
+#Location data
+
+filepath = cmds.file(q=True, sn=True)
+filename = filepath.split('/')[-1]
+filepathname = filepath.split('/')[-2]
+upperPath = filepath.split('/')[-3]
+sequencePath = filepath.split('/')[-5]
+objname = filename.split('_')[0]
+folderpath = '/'.join(filepath.split('/')[:-1])+'/'
+location = filepath.split('/')[-6]
+pubFolderpath = folderpath.split(location)[0]+'publish'+folderpath.split(location)[1]
+saveFolderpath = folderpath.split(location)[0]+'wip'+folderpath.split(location)[1]
+selected = cmds.ls(sl=True)
+
+version = int(filename.split('v')[1].split('.')[0])
 
 def SavePublishTool():
     if cmds.window('SavePublishTool', exists = True):
         cmds.deleteUI('SavePublishTool')
         
-    cmds.window('SavePublishTool', resizeToFitChildren=True)
+    cmds.window('SavePublishTool', widthHeight = (300, 225), sizeable = False, resizeToFitChildren=True)
+    with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=10)) as col:
+
+        cmds.columnLayout(adjustableColumn = True)
     
- #   cmds.window('SavePublishTool', widthHeight=(200, 450))
-
-    cmds.columnLayout(adjustableColumn = True)
+        cmds.separator(h=35)
+        cmds.text(label = "Save and Publish Tool", align = "center", font = "boldLabelFont")
+        cmds.separator(h=35)
     
-    cmds.separator(h=10)
-    cmds.text(label = "Selected Object's Name", align = "center")
-    cmds.text(label = "-Assetname-", align = "center", font = "boldLabelFont")
-    cmds.separator(h=10)
+      
+        cmds.text(label = "File Name", align = "center")
+        cmds.text(filename, align = "center", font = "smallObliqueLabelFont")
+        cmds.button(label = "Save", align = "center", command=checkFileAndSave)
+        cmds.separator(h=15)
     
-    cmds.text(label = "Asset department selection")
+        cmds.text(label = "Selected items", align = "center")
+        cmds.text(selected, align = "center", font = "smallObliqueLabelFont")
+        cmds.button(label = "Publish", align = "center", command=publish)
+        cmds.separator(h=15)
     
-    cmds.button(label = "SetPiece", align = "center")
-    cmds.button(label = "Set", align = "center")
-    cmds.button(label = "Props", align = "center")
-    cmds.button(label = "Character", align = "center")
-    cmds.separator(h=10)
-    
-    cmds.text(label = "Current Department Selected", align = "center")
-    cmds.text(label = "-SetPiece-", align = "center", font = "boldLabelFont")
-    cmds.separator(h=10)
-
-    cmds.separator(h=10)
-    cmds.button(label = "Save scene", align = "center", command=SaveFile)
-    cmds.button(label = "Publish", align = "center")
-    cmds.separator(h=10)
-    
-    cmds.showWindow('SavePublishTool')
-
-def saveAssetButton():
-	obj = cmds.ls(selection = True)[0] #get selected object
-
-	if (objCategory == "setPiece"):
-		filePath = filePath + "C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/wip/assets/setPiece" + obj
-		#export surface + model
-		surVer = len(os.listdir(filePath + "/surfacing/")) + 1
-
-		#check number of files in directory to determine version number
-		modelVer = len(os.listdir(filePath + "/model/")) + 1
-		objList = cmds.listRelatives(obj)
-		for i in objList:
-			if (cmds.objectType(i, isType='surface')): #check child is surface
-				cmds.file(filePath + obj + "_surface.v" + surVer + ".mb", type="mayaBinary", exportAsReference=True)
-			if (cmds.objectType(i, isType='model')): #check child is model
-				cmds.file(filePath + obj + "_model.v" + modelVer + ".mb", type="mayaBinary", exportAsReference=True)
-
-
-def saveSeqButton():
-	filePath = cmds.textField("fileDirectory", q=True, v=True)
-	seqNum = cmds.textField("seqTF", q=True, v=True)
-	shotNum = cmds.textField("shotNum", q=True, v=True)
-	filePath = filePath + "/wip/seqeunce" + seqNum + "/" + shotNum
-	if (seqCategory == "Animation"):
-		animVer = len(os.listdir(filePath + '/animation/'))  + 1 #check how many files in folder to determine vers num
-		file.save(filePath + '/animation.v' + animVer + '.mb', type="mayaBinary", save=True)
-	if (seqCategory == "Lighting"):
-		lightVer = len(os.listdir(filePath + '/light/'))  + 1 #check how many files in folder to determine vers num
-		file.save(filePath + '/light.v' + lightVer + '.mb', type="mayaBinary", save=True)
-	if (seqCategory == "Layout"):
-		layoutVer = len(os.listdir(filePath + '/layout/'))  + 1 #check how many files in folder to determine vers num
-		file.save(filePath + '/layout.v' + lightVer + '.mb', type="mayaBinary", save=True)
+        cmds.showWindow('SavePublishTool')
 
 
 def SaveFile(*args):
@@ -85,4 +59,86 @@ def SaveFile(*args):
         cmds.file( save=True , type = 'mayaAscii')
         cmds.confirmDialog(m='New version saved to Project Folder')
     
+def checkFileAndSave(list):
+#Assets
+    #WIP surfacing
+    if  "surfacing" in filepathname:
+            s = "surface"
+            naming = objname + "_" + s + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+    #WIP models
+    if  "model" in filepathname:
+            m = "model"
+            naming = objname + "_" + m + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+    #WIP anim
+    if "spiderBot" in upperPath:
+            a = "anim"
+            naming = objname + "_" + a + "_" + a + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+    #WIP rig
+    if "rig" in filepathname:
+        if "rigImportScene" in filename:
+            naming = objname + "_" + "rigImportScene" + "_v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+            if "_" and "_" and "rig" in filename:
+                naming = objname + "_" + filepathname + "_v" + version1(filename, "mayaBinary")
+                cmds.file(rename = saveFolderpath + naming)
+                cmds.file(s=True,f=True)
+                print("File saved! Version"+str(version+1))
+        else:
+            naming = objname + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+    # WIP sequence Animation
+    if "sequence" in sequencePath and "animation" in filepathname:
+            naming = upperPath + "_anim.v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+    #WIP sequence Layout 
+    if "sequence" in sequencePath and "layout" in filepathname:
+            naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+str(version+1))
+
+    if "sequence" in sequencePath and "light" in filepathname:
+            naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
+            cmds.file(rename = saveFolderpath + naming)
+            cmds.file(s=True,f=True)
+            print("File saved! Version"+ version1(filename, "mayaBinary"))
+
+            
+    
+    
+def sameJson(oldfile, new):
+    old = json.load(open(oldfile))
+    if old == new:
+        return True
+    else:
+        return False
+
+def publish(list):
+    print(version1(filename, "mayaBinary"))
+    
+def version1(obj, type):
+    if obj == "": return "001"
+    else:
+        if (type == 'mayaBinary'): vers = int(filename.split('v')[1].split('.')[0])
+        else: vers = int(obj.split('.')[1].split('v')[1])+1
+    if vers < 10: return "00" + str(vers+1)
+    elif vers < 100: return "0" + str(vers+1)
+    return str(vers)
+
+
 SavePublishTool()
