@@ -27,9 +27,18 @@ def sameJson(oldfile, new):
     old = json.load(open(oldfile))
     if old == new: return True
     else: return False
+    
+def sameModel(sceneGeoList, shaderList):
+    #print(sceneGeoList)
+    #print(shaderList)
+    counter = 0
+    for geo, shader in shaderList.items():
+        if geo != sceneGeoList[counter]: return False
+        counter+=1
+    return True    
 
 def fileFormatCheck(type):
-    global warned
+    warned = False
     #get file directory and folder
     filepath = cmds.file(q=True, sn=True)
     fileType = filepath.split('/')[-2]
@@ -80,18 +89,14 @@ def checkPrevFileAndSave(list):
     if (os.path.exists(pubFolderpath+'textures/') == False): os.makedirs(pubFolderpath+'textures/') 
     file_list=os.listdir(pubFolderpath+'material/')
     #Check for Previous JSON files
-    existingJsonList = False
     for file in file_list:
-        if "json" in file: 
-            fileName = file
-            if sameJson(pubFolderpath+'material/'+fileName, list):
-                existingJsonList = True
+        if "json" in file: fileName = file
     #msg for created files
     msg = ""
     #If first time creating
     if 'fileName' not in locals(): fileName = shaderFile = surfaceFile = ""
     #Create files + check for ShaderList updates
-    if (fileName == "" or existingJsonList == False):
+    if (fileName == "" or sameJson(pubFolderpath+'material/'+fileName, list) == False):
 
         #MAYA SHADER
         file_list=os.listdir(pubFolderpath+'material/')
@@ -128,7 +133,7 @@ def checkPrevFileAndSave(list):
         #Success Message
         cmds.confirmDialog( title='Success', message=msg)
     else:
-        cmds.confirmDialog( title='Warning', message="No changes to shaders made or prior shaderlist exists.")
+        cmds.confirmDialog( title='Warning', message="No changes to shaders made.")
      
 def GetSurfaceList():
     clearList()
@@ -138,10 +143,26 @@ def GetSurfaceList():
     if shaderFolderpath != "":
         if os.path.exists(shaderFolderpath):
             file_list=os.listdir(shaderFolderpath)
+            sel = cmds.ls(sl=True, dag = True, s = True, o = True)
+            #get values in case parent and child have same name
+            child = cmds.ls(sel, long=True)[0].split('|')[:-1][-1]
+            parent = cmds.ls(sel, long=True)[0].split('|')[:-2][-1]
             #check that path has material folder/exists
             for file in file_list:
-                if "json" in file: jsonArray.append(file)
-        if jsonArray == []: cmds.confirmDialog( title='Warning', message="No shaderlist exists.")
+                if "json" in file:
+                    #select entire referenced object if child and parent don't share names
+                    if child != parent: cmds.select(cmds.ls(sel, long=True)[0].split('|')[:-2][-1])
+                    theNodes = cmds.ls(sl=True, dag = True, s = True, o = True)
+                    sceneGeoList = []
+                    shaderList = json.load(open(shaderFolderpath+file))
+                    #Go through selected
+                    for shade in theNodes:
+                        #get selected geo
+                        sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
+                    #compare selected geo to shaderlist geo and only collect matches
+                    if (sameModel(sceneGeoList, shaderList)):
+                        jsonArray.append(file)
+        if jsonArray == []: cmds.confirmDialog( title='Warning', message="No shaderlist exists for this model version.")
         else: 
             for vers in jsonArray:
                 shaderList = cmds.menuItem(p='shaderVersList', label = vers)
@@ -175,6 +196,8 @@ def setSurfaces():
                 importedShaders = cmds.file(shaderFolderpath+shaderFile, i=True, mergeNamespacesOnClash=True, namespace=namespace)
                 for geo, shader in shaderList.items():
                     #Select proper Geo and assign shader
+                    print(sceneGeo)
+                    print(geo)
                     if cmds.ls(sceneGeo+geo) == [] and warned == False:
                         warned = True
                         cmds.confirmDialog( title='Warning', message="This object's model and/or names are not set up correctly for shaders.")
@@ -186,10 +209,9 @@ def setSurfaces():
 
 #Window   
 def assignTool():
-    global warned
     if cmds.window('assignTool', exists = True): cmds.deleteUI('assignTool', window = True)
         
-    cmds.window('assignTool', title='SA', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
+    cmds.window('assignTool', title='Shader Tool', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
     with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
         cmds.separator(h=20)
         cmds.text("SHADER ASSIGNER", font="boldLabelFont")
