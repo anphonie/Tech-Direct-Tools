@@ -29,8 +29,11 @@ def sameJson(oldfile, new):
     else: return False
     
 def sameModel(sceneGeoList, shaderList):
+    #print("scene geo")
     #print(sceneGeoList)
+    #print("shader geo")
     #print(shaderList)
+    #print("")
     counter = 0
     for geo, shader in shaderList.items():
         if geo != sceneGeoList[counter]: return False
@@ -53,7 +56,7 @@ def fileFormatCheck(type):
               
 def getSelShaderPath():
     #get selected
-    selected = cmds.ls(sl=True,long=True)
+    selected = cmds.ls(sl=True, long=True, dag = True, s = True, o = True)
     if not selected==[]:return cmds.referenceQuery(selected[0][1:], filename = True).split('model')[0]+'surfacing/material/'
     else:
         cmds.confirmDialog( title='Warning', message="Nothing selected. Please select object.")
@@ -158,7 +161,10 @@ def GetSurfaceList():
                     #Go through selected
                     for shade in theNodes:
                         #get selected geo
-                        sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
+                        if (len(shade.split('Shape')[0].split(':')) == 1):
+                            #get regardless of multiple types
+                            sceneGeoList.append(shade.split('Shape')[0].split(':')[0].split('|')[-1])
+                        else:sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
                     #compare selected geo to shaderlist geo and only collect matches
                     if (sameModel(sceneGeoList, shaderList)):
                         jsonArray.append(file)
@@ -172,15 +178,12 @@ def setSurfaces():
         warned = False
         #get Shaderlist
         shaderVers = cmds.optionMenu('shaderVersList', q=True, v=True)
+        setGeo = ""
         if shaderVers is None: cmds.confirmDialog( title='Warning', message="No Object and Shaders selected.")
         else:
-            theNodes = cmds.ls(dag = True, s = True, o = True)
-            sceneGeo = ""
-            #Go through scene
-            for shade in theNodes:
-                #Geometry
-                geo = shade.split('Shape')[0]
-                if "mRef" in geo: sceneGeo = geo.split(':')[0]+":"
+            #Check if selected is in set or alone
+            selected = cmds.ls(sl=True, long=True, dag = True, s = True, o = True)
+            if "setGeo" in selected[0]: setGeo = selected[0].split('|')[2].split(':')[0]+":"
             #get path
             shaderFolderpath = getSelShaderPath()
             if os.path.exists(shaderFolderpath+shaderVers):
@@ -195,14 +198,15 @@ def setSurfaces():
                         if vers in file: shaderFile = file
                 importedShaders = cmds.file(shaderFolderpath+shaderFile, i=True, mergeNamespacesOnClash=True, namespace=namespace)
                 for geo, shader in shaderList.items():
-                    #Select proper Geo and assign shader
-                    print(sceneGeo)
-                    print(geo)
-                    if cmds.ls(sceneGeo+geo) == [] and warned == False:
+                    #Select proper Geo and assign shader (in case of multiple same objects
+                    for multGeo in selected:
+                        if geo in multGeo:
+                            geo = multGeo
+                    if cmds.ls(setGeo+geo) == [] and warned == False:
                         warned = True
                         cmds.confirmDialog( title='Warning', message="This object's model and/or names are not set up correctly for shaders.")
                     else:
-                        cmds.select(cmds.ls(sceneGeo+geo)[0])
+                        cmds.select(cmds.ls(setGeo+geo))
                         cmds.hyperShade(assign = (namespace+":"+shader))
             else: cmds.confirmDialog( title='Warning', message="The shaderList is not applicable to selected. Have you selected a different model?")
     else: cmds.confirmDialog( title='Warning', message="This is not a lighting file. Please open a lighting file to assign surfacers.")
