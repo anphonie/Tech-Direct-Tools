@@ -159,11 +159,11 @@ def GetSurfaceList():
                     shaderList = json.load(open(shaderFolderpath+file))
                     #Go through selected
                     for shade in theNodes:
-                        #get selected geo
-                        if (len(shade.split('Shape')[0].split(':')) == 1):
-                            #get regardless of multiple types
-                            sceneGeoList.append(shade.split('Shape')[0].split(':')[0].split('|')[-1])
-                        else:sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
+                        #get selected geo | get regardless of multiple types, or within sets or individually
+                        if (len(shade.split('Shape')[0].split(':')) == 1): sceneGeoList.append(shade.split('Shape')[0].split(':')[0].split('|')[-1])
+                        elif "setGeo" in cmds.ls(sl=True, long=True)[0]: sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
+                        elif "animGeo" in cmds.ls(sl=True, long=True)[0]: sceneGeoList.append(shade.split('Shape')[0].split(':')[1])
+                        else: sceneGeoList.append(shade.split('Shape')[0])
                     #compare selected geo to shaderlist geo and only collect matches
                     if (sameModel(sceneGeoList, shaderList)):
                         jsonArray.append(file)
@@ -177,13 +177,13 @@ def setSurfaces():
         warned = False
         #get Shaderlist
         shaderVers = cmds.optionMenu('shaderVersList', q=True, v=True)
-        setGeo = ""
+        prefix = ""
         if shaderVers is None: cmds.confirmDialog( title='Warning', message="No Object and Shaders selected.")
         else:
-            #Check if selected is in set or alone
-            #selected = cmds.ls(sl=True, long=True, dag = True, s = True, o = True)
             selected = selectAll()
-            if "setGeo" in selected[0]: setGeo = selected[0].split('|')[2].split(':')[0]+":"
+            #Check if selected is in set or alone
+            if "setGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
+            elif "animGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
             #get path
             shaderFolderpath = getSelShaderPath()
             if os.path.exists(shaderFolderpath+shaderVers):
@@ -201,11 +201,11 @@ def setSurfaces():
                     for multGeo in selected[-1]:
                         if geo in multGeo:
                             geo = multGeo
-                    if cmds.ls(setGeo+geo) == [] and warned == False:
+                    if cmds.ls(prefix+geo) == [] and warned == False:
                         warned = True
                         cmds.confirmDialog( title='Warning', message="This object's model and/or names are not set up correctly for shaders.")
                     else:
-                        cmds.select(cmds.ls(setGeo+geo))
+                        cmds.select(cmds.ls(prefix+geo))
                         cmds.hyperShade(assign = (namespace+":"+shader))
             else: cmds.confirmDialog( title='Warning', message="The shaderList is not applicable to selected. Have you selected a different model?")
     else: cmds.confirmDialog( title='Warning', message="This is not a lighting file. Please open a lighting file to assign surfacers.")
