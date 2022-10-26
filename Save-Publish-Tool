@@ -30,6 +30,7 @@ location = filepath.split('/')[-6]
 pubFolderpath = folderpath.split(location)[0]+'publish'+folderpath.split(location)[1]
 #WIP folder path
 saveFolderpath = folderpath.split(location)[0]+'wip'+folderpath.split(location)[1]
+#objects selected in the scene
 selected = cmds.ls(sl=True)
 
 global warned
@@ -54,13 +55,13 @@ def SavePublishTool():
 
         isWip = fileFormatCheck("wip")
         cmds.text(label = "File Name", align = "center", en = isWip)
-        if isWip:cmds.text(filename, align = "center", font = "smallObliqueLabelFont", en = isWip)
+        if isWip:cmds.text(filename, align = "center", font = "obliqueLabelFont", en = isWip)
         cmds.button(label = "Save", align = "center", command=checkFileAndSave, en = isWip)
         cmds.separator(h=15)
         
         isPublish = fileFormatCheck("publish")
         cmds.text(label = "Selected items", en = isPublish, align = "center")
-        cmds.text(selected, align = "center", font = "smallObliqueLabelFont", en = isPublish)
+        cmds.text(selected, align = "center", font = "obliqueLabelFont", en = isPublish)
         cmds.button(label = "Publish", align = "center", command=publish, en = isPublish)
         cmds.separator(h=15)
     
@@ -81,75 +82,66 @@ def fileFormatCheck(type):
         return False
     else: return False
 
+
+def Savefile():
+        msg = ""
+        cmds.file(save=True,f=True)
+        msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
+        cmds.confirmDialog( title='Success', message=msg)
+        cmds.deleteUI('SavePublishTool')
+
 def checkFileAndSave(list):
-    msg = ""
     #Assets
     #WIP surfacing
     if  "surfacing" in filepathname:
             s = "surface"
             naming = objname + "_" + s + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
     #WIP models
     if  "model" in filepathname:
             m = "model"
             naming = objname + "_" + m + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
+
     #WIP anim
     if  "anim" in filepathname and "spiderBot" in upperPath:
             a = "anim"
             naming = objname + "_" + a + "_" + a + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
     #WIP rig
     if "rig" in filepathname:
         if "rigImportScene" in filename:
             naming = objname + "_" + "rigImportScene" + "_v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
+
             if "_" and "_" and "rig" in filename:
                 naming = objname + "_" + filepathname + "_v" + version1(filename, "mayaBinary")
                 cmds.file(rename = saveFolderpath + naming)
-                cmds.file(s=True,f=True)
-                msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+                Savefile()
         else:
             naming = objname + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
+
     # WIP sequence Animation
     if "sequence" in sequencePath and "animation" in filepathname:
             naming = upperPath + "_anim.v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
     #WIP sequence Layout 
     if "sequence" in sequencePath and "layout" in filepathname:
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
+            Savefile()
     #WIP sequence Lighting
     if "sequence" in sequencePath and "light" in filepathname:
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = saveFolderpath + naming)
-            cmds.file(s=True,f=True)
-            msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
-            cmds.confirmDialog( title='Success', message=msg)
-            cmds.deleteUI('SavePublishTool')
+            Savefile()
 
 
 def publish(*args):
