@@ -66,6 +66,8 @@ finsetAss()
 fincharAss()
 findseqAss()
 
+
+   
 def referAss(assName):
     templist = []
     temp_path = setPiece_path + "\\" + assName + "\\model\\source\\"
@@ -107,9 +109,10 @@ def refercharAss(assName):
     cmds.file(temp_path + templist[-1],  r=True)
     #print(templist)
 
-def referseqAss(assName):
+def referseqAss(*args):
     templist = []
     templist2 = []
+    assName = cmds.optionMenu(seqMenu, q=True, v=True)
     temp_path = sequence_path + "\\" + assName + "\\animation\\cache\\alembic\\"
     temp_path2 = sequence_path + "\\" + assName + "\\layout\\cache\\alembic\\"
    
@@ -128,7 +131,7 @@ def referseqAss(assName):
     tempname2 = templist2[-1].split(".")
     cmds.file(temp_path2 + templist2[-1],  r=True, namespace = tempname2[0] + '_' + tempname2[1])
     #print(templist)
-   
+
 def unlockNode(*args):
     selection = cmds.ls(selection = True)
     for node in selection:
@@ -146,9 +149,18 @@ def checkFile():
 checkFile()
 
 def replaceRefer(*args):
-    refObj = str(cmds.ls(sl= True))
-    cmds.file(set_path + '/loungeRoom/model/loungeRoom_model.v003.mb', loadReference = 'loungeRoom_model_v002RN')
-    cmds.file(set_path + '/loungeRoom/model/loungeRoom_model.v003.mb', e=1, namespace='loungeRoom_model_v002')
+    refObj = cmds.ls(sl= True)
+    refNamespace = str(refObj[0]).split('_v')
+    ojPath = cmds.referenceQuery(refObj, filename = True)
+    objfilePath = ojPath.rsplit('.')
+    slverNo = cmds.optionMenu(verMenu, q = True, v = True)
+    if ( "model" in objfilePath[0] ):
+        csc = objfilePath[0] + '.v' + slverNo + '.mb'
+    else:
+        csc = objfilePath[0] + '.v' + slverNo + '.abc'
+    cmds.file(csc, loadReference = str(refObj[0]))
+    cmds.file(csc, e=1, namespace= refNamespace[0] + "_v" + slverNo)
+    print (csc)
 
 def verRefer(verNo):
     refObj = str(cmds.ls(sl= True))
@@ -179,17 +191,37 @@ def checkVer(*args):
                         if os.path.isfile(os.path.join(temp_path2, tpath2)):                            
                             if (dsStore not in tpath2):
                                 tempverList.append(tpath2)
+    else:
+        temp_path3 = set_path + '/loungeRoom/model/'
+        for tpath3 in os.listdir(temp_path3):
+            if os.path.isfile(os.path.join(temp_path3, tpath3)):                            
+                if (dsStore not in tpath3):
+                    tempverList.append(tpath3)
+                   
     for vList in tempverList:
         aVer = vList.split('.')
         nVer = aVer[-2].split('v')
         cVer.append(nVer[-1])
        
-    cmds.optionMenu( verMenu, edit=1, changeCommand = verRefer)
     #cmds.menuItem( label= "None")
    
-    for item in cVer:      
-        cmds.menuItem( label= str(item))    
-    print(verPath)            
+    if (verMenu is not None):
+        clearList(verMenu)
+       
+    changeTextFld()  
+    for item in cVer:
+        print(item)      
+        cmds.menuItem( p=verMenu, label= str(item))    
+               
+
+def clearList(dlMenu):
+    menuItems = cmds.optionMenu(dlMenu, q=True, itemListLong=True) # itemListLong returns the children
+    if menuItems:
+        cmds.deleteUI(menuItems)
+
+def changeTextFld(*args):
+    selected = str(cmds.ls(sl = True))
+    cmds.textField('curobjText', edit=True, tx=selected)
 
 if cmds.window('cTools', exists = True):
     cmds.deleteUI('cTools')
@@ -201,51 +233,17 @@ cmds.columnLayout()
 cmds.separator(h=10)
 cmds.text('Load new Assets: Automatically get latest version')
 cmds.separator(h=10)
-   
-   
-setpieceMenu = cmds.optionMenu(w = 300, label='Set Piece')
-cmds.optionMenu( setpieceMenu, edit=1, changeCommand= referAss)
-cmds.menuItem( label= "None")
-   
-for item in res:      
-    cmds.menuItem( label= str(item))
-   
-cmds.separator(h=20)
-
-propMenu = cmds.optionMenu(w = 300, label='Props')
-cmds.optionMenu( propMenu, edit=1, changeCommand= referpropAss)
-cmds.menuItem( label= "None")
-for item in propres:      
-    cmds.menuItem( label= str(item))
-
-cmds.separator(h=30)          
-
-
-setMenu = cmds.optionMenu(w = 300, label='Sets')
-cmds.optionMenu( setMenu, edit=1, changeCommand= refersetAss)
-cmds.menuItem( label= "None")
-   
-for item in setres:      
-    cmds.menuItem( label= str(item))
-   
-cmds.separator(h=20)
-
-charMenu = cmds.optionMenu(w = 300, label='Char')
-cmds.optionMenu( charMenu, edit=1, changeCommand= refersetAss)
-cmds.menuItem( label= "None")
-   
-for item in chares:      
-    cmds.menuItem( label= str(item))
-   
-cmds.separator(h=20)
 
 seqMenu = cmds.optionMenu(w = 300, label='Seq')
-cmds.optionMenu( seqMenu, edit=1, changeCommand= referseqAss)
+cmds.optionMenu( seqMenu, edit=1)
 cmds.menuItem( label= "None")
    
 for item in sqres:      
     cmds.menuItem( label= str(item))
    
+cmds.separator(h=20)
+cmds.button(label = 'Create Lighting Scene', command = referseqAss)  
+ 
 cmds.separator(h=20)
 
 objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
@@ -257,9 +255,12 @@ for item in refObj:
    
 cmds.separator(h=20)
 
-cmds.button(label = 'Reference Asset', command = replaceRefer)
-cmds.separator(h=20)
-verMenu = cmds.optionMenu(w = 300, label='Seq')
-cmds.button(label = 'unlock node', command = checkVer)
+#Select and find versions available for the selecting obj
+
+cmds.textField('curobjText', w = 250, text='None', editable=False )
+verMenu = cmds.optionMenu(label='Available Versions')
+cmds.button(label = 'Get current node versions', command = checkVer)
+cmds.button(label = 'Update current reference node', command = replaceRefer)
    
 cmds.showWindow('cTools')
+
