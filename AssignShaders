@@ -182,7 +182,7 @@ def setSurfaces():
         else:
             selected = selectAll()
             #Check if selected is in set or alone
-            if "setGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
+            #if "setGeo" in selected[0]: 
             #elif "animGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
             #get path
             shaderFolderpath = getSelShaderPath()
@@ -196,12 +196,10 @@ def setSurfaces():
                     if "shader." in file:
                         if vers in file: shaderFile = file
                 cmds.file(shaderFolderpath+shaderFile, i=True, mergeNamespacesOnClash=True, namespace=namespace)
+                #give set prefix if mRef
+                if "mRef" in selected[0].split('|')[-2].split(':')[1]: prefix = selected[0].split('|')[2].split(':')[0]+":"
                 for geo, shader in shaderList.items():
                     #Select proper Geo and assign shader (in case of multiple same objects)
-                    print("geo:")
-                    print(geo)
-                    print(cmds.ls(prefix+geo))
-                    #multiple objects
                     if len(cmds.ls(prefix+geo)) > 1:
                         if len(selected[0].split('|')[-2].split(':')) > 2:
                             geo = selected[0].split('|')[-2].split(':')[1]+":"+selected[0].split('|')[-2].split(':')[2]                    
