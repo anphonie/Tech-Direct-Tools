@@ -77,7 +77,7 @@ def referAss(*args):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
-    cmds.file(temp_path + templist[-1],  r=True, namespace = 'mRef_' + assName)
+    cmds.file(temp_path + templist[-1],  r=True, namespace = 'mRef_' + templist[-1])
     #print(templist)
    
 def referpropAss(assName):
@@ -112,6 +112,7 @@ def refercharAss(assName):
     #print(templist)
 
 def referseqAss(*args):
+    
     templist = []
     templist2 = []
     assName = cmds.optionMenu(seqMenu, q=True, v=True)
@@ -132,6 +133,7 @@ def referseqAss(*args):
             templist2.append(tpath2)
     tempname2 = templist2[-1].split(".")
     cmds.file(temp_path2 + templist2[-1],  r=True, namespace = tempname2[0] + '_' + tempname2[1])
+    
     #print(templist)
 
 def unlockNode(*args):
@@ -150,10 +152,9 @@ def checkFile(*args):
     for rNode in refNodes:
         if notinclRef not in rNode:
             allrefObj.append(rNode)
-    for item in refObj:      
+    for item in allrefObj:      
         cmds.menuItem( p=objMenu, label= str(item))
     print(allrefObj)
-
 
 def replaceRefer(*args):
     refObj = cmds.ls(sl= True)
