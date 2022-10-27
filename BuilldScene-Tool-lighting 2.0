@@ -16,6 +16,7 @@ sqres = []
 wipres = []
 layoutres = []
 animres = []
+modelres = []
 allrefObj = []
 verPath = ''
 setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
@@ -87,7 +88,29 @@ def findlayoutAss(*args):
                 layoutres.append(path)  
 
 
+def findanimAss(*args):   
+    asNa = "lng01_010" 
+    true_path = sequence_path + '/' + asNa + "/animation/cache/alembic"
+    if (animres is not None):
+        animres.clear()
+    for path in os.listdir(true_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(true_path, path)):
+            if (dsStore not in path):
+                animres.append(path)  
+    print (animres)
 
+def findmodelAss(*args):
+    asNa = "lng01_010" 
+    true_path = set_path + '/loungeRoom/model/'
+    if (modelres is not None):
+        modelres.clear()
+    for path in os.listdir(true_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(true_path, path)):
+            if (dsStore not in path):
+                modelres.append(path)  
+    print (modelres)
                        
 findsetPAss()
 finpropAss()
@@ -95,6 +118,8 @@ findsetAss()
 fincharAss()
 findseqAss()
 findlayoutAss()
+findanimAss()
+findmodelAss()
 
 def saveFile(*args):
     asNa = 'lng01_010'
@@ -184,12 +209,31 @@ def checkFile(*args):
     if allrefObj is not None:
         allrefObj.clear()
         clearList(objMenu)
-                
+    temp_ref = []            
     refNodes = cmds.ls(rf = True)
     notinclRef = "mRefRN"
     for rNode in refNodes:
         if notinclRef not in rNode:
-            allrefObj.append(rNode)
+            temp_ref.append(rNode)
+         
+    for allRef in temp_ref:
+        ojPath = cmds.referenceQuery(allRef, filename = True)
+        rPath = ojPath.rsplit('/', 1)[-1].rsplit('.', 1)
+        objfilePath = rPath[0] + ".abc"
+        objfilemlPath = rPath[0] + ".mb"
+        if ("layout" in allRef):
+            if (objfilePath != layoutres[-1]):
+                print(layoutres[-1])
+                allrefObj.append(allRef)
+        elif ("anim" in allRef):
+            if (objfilePath != animres[-1]):
+                print(animres[-1])
+                allrefObj.append(allRef)
+        elif ("model" in allRef):
+            if (objfilemlPath != modelres[-1]):
+                print(modelres[-1])    
+                allrefObj.append(allRef)
+   
     for item in allrefObj:      
         cmds.menuItem( p=objMenu, label= str(item))
     print(allrefObj)
@@ -266,7 +310,9 @@ def updateallRef(*args):
     asNa = 'lng01_010'
     for allRef in allrefObj:
         ojPath = cmds.referenceQuery(allRef, filename = True)
-        objfilePath = ojPath.rsplit('/', 1)
+        rPath = ojPath.rsplit('/', 1)[-1].rsplit('.', 1)
+        objfilePath = rPath[0] + ".abc"
+        objfilemlPath = rPath[0] + ".mb"
         if ("layout" in allRef):
             if (objfilePath[-1] != layoutres[-1]):
                 sR = layoutres[-1].split('.')
@@ -277,10 +323,35 @@ def updateallRef(*args):
                 svNo = tR.split('v')
                 cmds.select(allRef)
                 rfiObj = cmds.ls(sl =True)
+                print (objfilePath)
+                print (layoutres[-1])
+                unlockNode(svNo[-1], rfiObj[0])
+        elif ("anim" in allRef):
+            if (objfilePath[-1] != animres[-1]):
+                sR = animres[-1].split('.')
+                tR = sR[0] + '_' + sR[1]
+                true_path = sequence_path + '/' + asNa + "/animation/cache/alembic/"
+                cmds.file(true_path + animres[-1], loadReference = str(allRef))
+                cmds.file(true_path + animres[-1], e=1, namespace= tR)                
+                svNo = tR.split('v')
+                cmds.select(allRef)
+                rfiObj = cmds.ls(sl =True)
                 print (rfiObj[0])
                 unlockNode(svNo[-1], rfiObj[0])
-        
-    
+        elif ("model" in allRef):
+            if (objfilemlPath[-1] != modelres[-1]):
+                sR = modelres[-1].split('.')
+                tR = sR[0] + '_' + sR[1]
+                true_path = sequence_path + '/' + asNa + "/animation/cache/alembic/"
+                cmds.file(true_path + modelres[-1], loadReference = str(allRef))
+                cmds.file(true_path + modelres[-1], e=1, namespace= tR)                
+                svNo = tR.split('v')
+                cmds.select(allRef)
+                rfiObj = cmds.ls(sl =True)
+                print (rfiObj[0])
+                unlockNode(svNo[-1], rfiObj[0])
+    clearList(objMenu)            
+                
 def clearList(dlMenu):
     menuItems = cmds.optionMenu(dlMenu, q=True, itemListLong=True) # itemListLong returns the children
     if menuItems:
@@ -294,7 +365,7 @@ def changeTextFld(*args):
 if cmds.window('cTools', exists = True):
         cmds.deleteUI('cTools')
        
-cmds.window('cTools', title='Shader Tool', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
+cmds.window('cTools', title='Build Scene Tool', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
 with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:   
     cmds.separator(h=10)
     cmds.text("BUILD LIGHTING SCENE", font="boldLabelFont")
@@ -318,13 +389,12 @@ with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
     cmds.textField('curobjText', w = 250, text='None', editable=False )
     verMenu = cmds.optionMenu(label='Available Versions')
         
-    cmds.button(label = 'Update selected reference node', command = replaceRefer)
+    cmds.button(label = 'Change selected reference version', command = replaceRefer)
     cmds.separator(h=20)
     cmds.text('Update Check', font="boldLabelFont")
     cmds.button(label = 'Check all reference update', command = checkFile)
-    objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
+    objMenu = cmds.optionMenu(w = 300, label='All references need update')
     cmds.optionMenu( objMenu, edit=1)      
-    cmds.button(label = 'Update selected only')
     cmds.button(label = 'Update All', command = updateallRef)
     cmds.separator(h=20)
     cmds.text('Load Other Assets (additional)', font="boldLabelFont")
