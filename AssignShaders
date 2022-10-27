@@ -31,7 +31,7 @@ def sameJson(oldfile, new):
 def sameModel(sceneGeoList, shaderList):
     counter = 0
     for geo, shader in shaderList.items():
-        if geo != sceneGeoList[counter]: return False
+        if geo not in sceneGeoList[counter]: return False
         counter+=1
     return True    
 
@@ -201,6 +201,8 @@ def setSurfaces():
                     for multGeo in selected[-1]:
                         if geo in multGeo:
                             geo = multGeo
+                    loaded = geo.split('_')[1]+":"+geo.split('_')[1]
+                    if loaded in selected[-1]: geo = geo+":"+geo.split('_')[1]
                     if cmds.ls(prefix+geo) == [] and warned == False:
                         warned = True
                         cmds.confirmDialog( title='Warning', message="This object's model and/or names are not set up correctly for shaders.")
