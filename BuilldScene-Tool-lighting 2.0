@@ -13,7 +13,7 @@ propres = []
 setres = []
 chares = []
 sqres = []
-refObj = []
+allrefObj = []
 verPath = ''
 setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
 prop_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/prop"
@@ -141,18 +141,18 @@ def unlockNode(*args):
 
 
 def checkFile(*args):
-    if refObj is not None:
-        refObj.clear()
+    if allrefObj is not None:
+        allrefObj.clear()
         clearList(objMenu)
                 
     refNodes = cmds.ls(rf = True)
     notinclRef = "mRefRN"
     for rNode in refNodes:
         if notinclRef not in rNode:
-            refObj.append(rNode)
+            allrefObj.append(rNode)
     for item in refObj:      
         cmds.menuItem( p=objMenu, label= str(item))
-    print(refObj)
+    print(allrefObj)
 
 checkFile()
 
@@ -169,6 +169,7 @@ def replaceRefer(*args):
     cmds.file(csc, loadReference = str(refObj[0]))
     cmds.file(csc, e=1, namespace= refNamespace[0] + "_v" + slverNo)
     print (csc)
+
 
 def verRefer(verNo):
     refObj = str(cmds.ls(sl= True))
