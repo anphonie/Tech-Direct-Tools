@@ -1,11 +1,14 @@
 import maya.cmds as cmds
+import maya.standalone
+import pymel.core.other as pco
 from maya.common.ui import LayoutManager
+import pymel.core as pm 
 import os.path
 import json
 global path
 global objCategory
 global seqCategory
-
+pm.loadPlugin("fbxmaya")
 #Location data
 
 #Full file path
@@ -54,14 +57,12 @@ def SavePublishTool():
         cmds.separator(h=35)
 
         isWip = fileFormatCheck("wip")
+        cmds.text(label = "Currently in WIP", align = "center", en = isWip)
         cmds.text(label = "File Name", align = "center", en = isWip)
         if isWip:cmds.text(filename, align = "center", font = "obliqueLabelFont", en = isWip)
         cmds.button(label = "Save", align = "center", command=checkFileAndSave, en = isWip)
         cmds.separator(h=15)
         
-        #isPublish = fileFormatCheck("publish")
-        cmds.text(label = "Selected items", en = isWip, align = "center")
-        cmds.text(selected, align = "center", font = "obliqueLabelFont", en = isWip)
         cmds.button(label = "Publish", align = "center", command=publish, en = isWip)
         cmds.separator(h=15)
     
@@ -73,7 +74,7 @@ def fileFormatCheck(type):
     filepath = cmds.file(q=True, sn=True)
     fileType = wipPath
     if 'wip' in filepath:
-        if fileType == type:
+        if fileType == type or type == True:
             return True
         else: return False
     elif warned == False:
@@ -88,15 +89,17 @@ def Savefile():
         msg+= "File saved!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
         cmds.confirmDialog( title='Success', message=msg)
 
+def Savefile2():
+        msg = ""
+        cmds.file(save=True,f=True)
+
 def pubAlembicfile():
         msg = ""
-        cmds.file(save=True,f=True, typ = 'alembic')
         msg+= ".abc File published!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
         cmds.confirmDialog( title='Success', message=msg)
 
 def pubFBXfile():
         msg = ""
-        cmds.file(save=True,f=True, typ = 'mayaFbx')
         msg+= ".FBX File published!" + "\n" + objname + " " + "Version" + " " + str(version+1) + " " + "made."
         cmds.confirmDialog( title='Success', message=msg)
 
@@ -172,30 +175,21 @@ def publish(*args):
             naming = objname + "_" + s + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+            cmds.file(rename = saveFolderpath + naming)
+            Savefile2()
 
     #WIP models
     if  "model" in filepathname:
             m = "model"
             naming = objname + "_" + m + ".v" + version1(filename, "mayaBinary")
-            cmds.file(rename = pubFolderpath+ 'source/' + naming)
-            Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()
-
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+            if "set/" in filepath:
+                cmds.file(rename = pubFolderpath+ naming)
+                Savefile()
+            else:
+                cmds.file(rename = pubFolderpath+ 'source/' + naming)
+                Savefile()
+            cmds.file(rename = saveFolderpath + naming)
+            Savefile2()
 
     #WIP anim
     if  "anim" in filepathname and "spiderBot" in upperPath:
@@ -207,10 +201,7 @@ def publish(*args):
             pubAlembicfile()
             cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
             pubFBXfile()
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+
     #WIP rig
     if "rig" in filepathname:
         if "rigImportScene" in filename:
@@ -221,10 +212,7 @@ def publish(*args):
             pubAlembicfile()
             cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
             pubFBXfile()
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+
 
             if "_" and "_" and "rig" in filename:
                 naming = objname + "_" + filepathname + "_v" + version1(filename, "mayaBinary")
@@ -233,10 +221,8 @@ def publish(*args):
                 cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
                 pubAlembicfile()
                 cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-                pubFBXfile()    #Debugging
-                print(pubFolderpath+'source/')  
-                print(pubFolderpath+ 'cache/alembic')  
-                print(pubFolderpath+ 'cache/fbx') 
+                pubFBXfile()    
+
         else:
             naming = objname + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
@@ -244,37 +230,34 @@ def publish(*args):
             cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
             pubAlembicfile()
             cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()    #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+            pubFBXfile()    
 
     # WIP sequence Animation
     if "sequence" in sequencePath and "animation" in filepathname:
             naming = upperPath + "_anim.v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
+            #cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
+            pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+            #pubAlembicfile()
+
+
     #WIP sequence Layout 
     if "sequence" in sequencePath and "layout" in filepathname:
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
+                #FBX export 
+            pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
-                #Debugging
-            print(pubFolderpath+'source/')  
-            print(pubFolderpath+ 'cache/alembic')  
-            print(pubFolderpath+ 'cache/fbx') 
+            
+            #ABC export
+            export = pubFolderpath+ 'cache//'+ naming
+            pco.AbcExport(jobArg="-frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/light/cache/alembic/'" + naming)
+            pubAlembicfile()
+            
+            Savefile2()
             
             
     #WIP sequence Lighting
@@ -282,15 +265,11 @@ def publish(*args):
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
+            #cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
+            pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
+            #pubAlembicfile()
     
-    #Debugging
-    print(pubFolderpath+'source/')  
-    print(pubFolderpath+ 'cache/alembic')  
-    print(pubFolderpath+ 'cache/fbx') 
     
 def version1(obj, type):
     if obj == "": return "001"
