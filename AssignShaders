@@ -183,7 +183,7 @@ def setSurfaces():
             selected = selectAll()
             #Check if selected is in set or alone
             if "setGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
-            elif "animGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
+            #elif "animGeo" in selected[0]: prefix = selected[0].split('|')[2].split(':')[0]+":"
             #get path
             shaderFolderpath = getSelShaderPath()
             if os.path.exists(shaderFolderpath+shaderVers):
@@ -195,14 +195,16 @@ def setSurfaces():
                 for file in file_list:
                     if "shader." in file:
                         if vers in file: shaderFile = file
-                importedShaders = cmds.file(shaderFolderpath+shaderFile, i=True, mergeNamespacesOnClash=True, namespace=namespace)
+                cmds.file(shaderFolderpath+shaderFile, i=True, mergeNamespacesOnClash=True, namespace=namespace)
                 for geo, shader in shaderList.items():
                     #Select proper Geo and assign shader (in case of multiple same objects)
-                    for multGeo in selected[-1]:
-                        if geo in multGeo:
-                            geo = multGeo
-                    loaded = geo.split('_')[1]+":"+geo.split('_')[1]
-                    if loaded in selected[-1]: geo = geo+":"+geo.split('_')[1]
+                    print("geo:")
+                    print(geo)
+                    print(cmds.ls(prefix+geo))
+                    #multiple objects
+                    if len(cmds.ls(prefix+geo)) > 1:
+                        if len(selected[0].split('|')[-2].split(':')) > 2:
+                            geo = selected[0].split('|')[-2].split(':')[1]+":"+selected[0].split('|')[-2].split(':')[2]                    
                     if cmds.ls(prefix+geo) == [] and warned == False:
                         warned = True
                         cmds.confirmDialog( title='Warning', message="This object's model and/or names are not set up correctly for shaders.")
@@ -219,7 +221,7 @@ def assignTool():
     cmds.window('assignTool', title='Shader Tool', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
     with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
         cmds.separator(h=20)
-        cmds.text("SHADER ASSIGNER", font="boldLabelFont")
+        cmds.text("SATool", font="boldLabelFont")
         #Surfacing
         isSurfacing = fileFormatCheck("surfacing")
         cmds.separator(h=20)
