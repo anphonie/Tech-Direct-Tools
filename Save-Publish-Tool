@@ -253,8 +253,10 @@ def publish(*args):
             pubFBXfile()
             
             #ABC export
-            export = pubFolderpath+ 'cache//'+ naming
-            pco.AbcExport(jobArg="-frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/light/cache/alembic/'" + naming)
+            
+            needEx = "-sl -frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/layout/cache/alembic/lng01_010_layout.v003.abc'" 
+            pco.AbcExport(jobArg=needEx)
+            
             pubAlembicfile()
             
             Savefile2()
