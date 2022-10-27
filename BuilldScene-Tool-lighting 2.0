@@ -14,6 +14,8 @@ setres = []
 chares = []
 sqres = []
 wipres = []
+layoutres = []
+animres = []
 allrefObj = []
 verPath = ''
 setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
@@ -24,7 +26,7 @@ sequence_path = cmds.workspace(fullName=True) + "/scenes/publish/sequence/lng01"
 wipsq_path = cmds.workspace(fullName=True) + "/scenes/wip/sequence/lng01"
 dsStore = "DS_Store"
 
-def findsetAss():    
+def findsetPAss():    
    
     for path in os.listdir(setPiece_path):
     # check if current path is a file
@@ -40,7 +42,7 @@ def finpropAss():
             propres.append(path)
     print(propres)
 
-def finsetAss():    
+def findsetAss():    
    
     for path in os.listdir(set_path):
     # check if current path is a file
@@ -63,8 +65,7 @@ def findseqAss():
         if os.path.isdir(os.path.join(sequence_path, path)):
             sqres.append(path)
             
-def findwipsqAss(*args):   
-    asNa = "lng01_010" 
+def findwipsqAss(asNa):    
     true_path = wipsq_path + '/' + asNa + "/light/"
     if (wipres is not None):
         wipres.clear()
@@ -72,17 +73,32 @@ def findwipsqAss(*args):
     # check if current path is a file
         if os.path.isfile(os.path.join(true_path, path)):
             if (dsStore not in path):
-                wipres.append(path)  
-   
-findsetAss()
+                wipres.append(path) 
+                 
+def findlayoutAss(*args):   
+    asNa = "lng01_010" 
+    true_path = sequence_path + '/' + asNa + "/layout/cache/alembic"
+    if (layoutres is not None):
+        layoutres.clear()
+    for path in os.listdir(true_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(true_path, path)):
+            if (dsStore not in path):
+                layoutres.append(path)  
+
+
+
+                       
+findsetPAss()
 finpropAss()
-finsetAss()
+findsetAss()
 fincharAss()
 findseqAss()
+findlayoutAss()
 
 def saveFile(*args):
-    asNa = "lng01_010"
-    findwipsqAss()
+    asNa = 'lng01_010'
+    findwipsqAss(asNa)
     upVer = len(wipres) + 1
     upverNo = "\n".join(["%03d" % upVer])
     cmds.file(rename = wipsq_path + '/' + asNa + "/light/" + asNa + "_light.v" + upverNo) 
@@ -137,7 +153,7 @@ def referseqAss(*args):
     assName = cmds.optionMenu(seqMenu, q=True, v=True)
     temp_path = sequence_path + "\\" + assName + "\\animation\\cache\\alembic\\"
     temp_path2 = sequence_path + "\\" + assName + "\\layout\\cache\\alembic\\"
-    saveFile(assName)
+    
     
     refersetAss("loungeRoom")
     
@@ -154,14 +170,15 @@ def referseqAss(*args):
     tempname2 = templist2[-1].split(".")
     cmds.file(temp_path2 + templist2[-1],  r=True, namespace = tempname2[0] + '_' + tempname2[1])
     
-    
+    saveFile(assName)
     #print(templist)
 
-def unlockNode(*args):
-    selection = cmds.ls(selection = True)
-    for node in selection:
-        cmds.lockNode(node, lock = False)
-
+def unlockNode(sverNo, slted):   
+    getName = slted.split('_v')
+    changeName = getName[0] + '_v' + sverNo + 'RN'
+    cmds.lockNode(slted, lock = False)
+    cmds.rename(slted, changeName)
+    cmds.lockNode(changeName, lock = True)
 
 def checkFile(*args):
     if allrefObj is not None:
@@ -183,13 +200,15 @@ def replaceRefer(*args):
     ojPath = cmds.referenceQuery(refObj, filename = True)
     objfilePath = ojPath.rsplit('.')
     slverNo = cmds.optionMenu(verMenu, q = True, v = True)
+    
     if ( "model" in objfilePath[0] ):
         csc = objfilePath[0] + '.v' + slverNo + '.mb'
     else:
         csc = objfilePath[0] + '.v' + slverNo + '.abc'
     cmds.file(csc, loadReference = str(refObj[0]))
     cmds.file(csc, e=1, namespace= refNamespace[0] + "_v" + slverNo)
-    print (csc)
+    
+    unlockNode(slverNo, refObj[0])
 
 
 def verRefer(verNo):
@@ -243,7 +262,25 @@ def checkVer(*args):
         print(item)      
         cmds.menuItem( p=verMenu, label= str(item))    
                
-
+def updateallRef(*args):
+    asNa = 'lng01_010'
+    for allRef in allrefObj:
+        ojPath = cmds.referenceQuery(allRef, filename = True)
+        objfilePath = ojPath.rsplit('/', 1)
+        if ("layout" in allRef):
+            if (objfilePath[-1] != layoutres[-1]):
+                sR = layoutres[-1].split('.')
+                tR = sR[0] + '_' + sR[1]
+                true_path = sequence_path + '/' + asNa + "/layout/cache/alembic/"
+                cmds.file(true_path + layoutres[-1], loadReference = str(allRef))
+                cmds.file(true_path + layoutres[-1], e=1, namespace= tR)                
+                svNo = tR.split('v')
+                cmds.select(allRef)
+                rfiObj = cmds.ls(sl =True)
+                print (rfiObj[0])
+                unlockNode(svNo[-1], rfiObj[0])
+        
+    
 def clearList(dlMenu):
     menuItems = cmds.optionMenu(dlMenu, q=True, itemListLong=True) # itemListLong returns the children
     if menuItems:
@@ -288,7 +325,7 @@ with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
     objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
     cmds.optionMenu( objMenu, edit=1)      
     cmds.button(label = 'Update selected only')
-    cmds.button(label = 'Update All')
+    cmds.button(label = 'Update All', command = updateallRef)
     cmds.separator(h=20)
     cmds.text('Load Other Assets (additional)', font="boldLabelFont")
     setpieceMenu = cmds.optionMenu(w = 300, label='Set Piece')
@@ -297,7 +334,7 @@ with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
    
     for item in res:      
         cmds.menuItem( label= str(item))
-    cmds.button(label = 'Load Asset (Latest)', command = findwipsqAss)    
+    cmds.button(label = 'Load Asset (Latest)', command = referAss)    
     cmds.separator(h=20)
     
 cmds.showWindow('cTools')        
