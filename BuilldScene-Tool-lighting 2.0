@@ -2,6 +2,8 @@
 import maya.cmds as cmds
 import math
 from mtoa.core import createStandIn
+from maya.common.ui import LayoutManager
+
 import random
 
 cmds.SetProject()
@@ -66,9 +68,9 @@ finsetAss()
 fincharAss()
 findseqAss()
 
-
-   
-def referAss(assName):
+ 
+def referAss(*args):
+    assName = cmds.optionMenu(setpieceMenu, q= True, v = True)
     templist = []
     temp_path = setPiece_path + "\\" + assName + "\\model\\source\\"
     for tpath in os.listdir(temp_path):
@@ -138,12 +140,18 @@ def unlockNode(*args):
         cmds.lockNode(node, lock = False)
 
 
-def checkFile():
+def checkFile(*args):
+    if refObj is not None:
+        refObj.clear()
+        clearList(objMenu)
+                
     refNodes = cmds.ls(rf = True)
     notinclRef = "mRefRN"
     for rNode in refNodes:
         if notinclRef not in rNode:
             refObj.append(rNode)
+    for item in refObj:      
+        cmds.menuItem( p=objMenu, label= str(item))
     print(refObj)
 
 checkFile()
@@ -220,47 +228,54 @@ def clearList(dlMenu):
         cmds.deleteUI(menuItems)
 
 def changeTextFld(*args):
-    selected = str(cmds.ls(sl = True))
-    cmds.textField('curobjText', edit=True, tx=selected)
+    selected = cmds.ls(sl = True)
+    cmds.textField('curobjText', edit=True, tx=selected[0])
 
+#Window   
 if cmds.window('cTools', exists = True):
-    cmds.deleteUI('cTools')
+        cmds.deleteUI('cTools')
        
-cmds.window('cTools')
-   
-cmds.columnLayout()
-   
-cmds.separator(h=10)
-cmds.text('Load new Assets: Automatically get latest version')
-cmds.separator(h=10)
+cmds.window('cTools', title='Shader Tool', widthHeight = (250, 300), sizeable = False, resizeToFitChildren = True)
+with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:   
+    cmds.separator(h=10)
+    cmds.text("BUILD LIGHTING SCENE", font="boldLabelFont")
+    cmds.separator(h=10)        
 
-seqMenu = cmds.optionMenu(w = 300, label='Seq')
-cmds.optionMenu( seqMenu, edit=1)
-cmds.menuItem( label= "None")
+    seqMenu = cmds.optionMenu(w = 300, label='Seq')
+    cmds.optionMenu( seqMenu, edit=1)
+    cmds.menuItem( label= "None")
    
-for item in sqres:      
-    cmds.menuItem( label= str(item))
-   
-cmds.separator(h=20)
-cmds.button(label = 'Create Lighting Scene', command = referseqAss)  
+    for item in sqres:      
+        cmds.menuItem( label= str(item))
+
+    cmds.button(label = 'Create Lighting Scene', command = referseqAss)  
  
-cmds.separator(h=20)
+    cmds.separator(h=20)
+    cmds.text('Versions Control', font="boldLabelFont")
+    cmds.button(label = 'Get selected reference versions', command = checkVer)
+    
+    #Select and find versions available for the selecting obj
 
-objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
-cmds.optionMenu( objMenu, edit=1)
-cmds.menuItem( label= "None")
+    cmds.textField('curobjText', w = 250, text='None', editable=False )
+    verMenu = cmds.optionMenu(label='Available Versions')
+        
+    cmds.button(label = 'Update selected reference node', command = replaceRefer)
+    cmds.separator(h=20)
+    cmds.text('Update Check', font="boldLabelFont")
+    cmds.button(label = 'Check all reference update', command = checkFile)
+    objMenu = cmds.optionMenu(w = 300, label='All referenced node in scene')
+    cmds.optionMenu( objMenu, edit=1)      
+    cmds.button(label = 'Update selected only')
+    cmds.button(label = 'Update All')
+    cmds.separator(h=20)
+    cmds.text('Load Other Assets (additional)', font="boldLabelFont")
+    setpieceMenu = cmds.optionMenu(w = 300, label='Set Piece')
+    cmds.optionMenu( setpieceMenu, edit=1)
+    cmds.menuItem( label= "None")
    
-for item in refObj:      
-    cmds.menuItem( label= str(item))
-   
-cmds.separator(h=20)
-
-#Select and find versions available for the selecting obj
-
-cmds.textField('curobjText', w = 250, text='None', editable=False )
-verMenu = cmds.optionMenu(label='Available Versions')
-cmds.button(label = 'Get current node versions', command = checkVer)
-cmds.button(label = 'Update current reference node', command = replaceRefer)
-   
-cmds.showWindow('cTools')
-
+    for item in res:      
+        cmds.menuItem( label= str(item))
+    cmds.button(label = 'Load Asset (Latest)', command = referAss)    
+    cmds.separator(h=20)
+    
+cmds.showWindow('cTools')        
