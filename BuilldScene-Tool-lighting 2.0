@@ -77,7 +77,7 @@ def referAss(*args):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
-    cmds.file(temp_path + templist[-1],  r=True, namespace= 'mRef_' + assName)
+    cmds.file(temp_path + templist[-1],  r=True)
     #print(templist)
    
 def referpropAss(assName):
@@ -92,14 +92,14 @@ def referpropAss(assName):
 
 def refersetAss(assName):
     templist = []
-    temp_path = set_path + "\\" + assName + "\\model\\source\\"
+    temp_path = set_path + "\\" + assName + "\\model\\"
     for tpath in os.listdir(temp_path):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
     tempname = templist[-1].split(".")
     cmds.file(temp_path + templist[-1],  r=True, namespace = tempname[0] + '_' + tempname[1])
-    print(temp_path + templist[-1])
+    print(templist)
    
 def refercharAss(assName):
     templist = []
@@ -200,7 +200,7 @@ def checkVer(*args):
                             if (dsStore not in tpath2):
                                 tempverList.append(tpath2)
     else:
-        temp_path3 = set_path + '/loungeRoom/model/source/'
+        temp_path3 = set_path + '/loungeRoom/model/'
         for tpath3 in os.listdir(temp_path3):
             if os.path.isfile(os.path.join(temp_path3, tpath3)):                            
                 if (dsStore not in tpath3):
