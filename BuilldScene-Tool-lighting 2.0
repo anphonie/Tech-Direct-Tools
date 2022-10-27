@@ -154,7 +154,6 @@ def checkFile(*args):
         cmds.menuItem( p=objMenu, label= str(item))
     print(allrefObj)
 
-checkFile()
 
 def replaceRefer(*args):
     refObj = cmds.ls(sl= True)
