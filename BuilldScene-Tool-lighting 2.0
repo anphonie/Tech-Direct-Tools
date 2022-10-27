@@ -77,7 +77,7 @@ def referAss(*args):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
             templist.append(tpath)
-    cmds.file(temp_path + templist[-1],  r=True)
+    cmds.file(temp_path + templist[-1],  r=True, namespace = 'mRef_' + assName)
     #print(templist)
    
 def referpropAss(assName):
@@ -154,6 +154,7 @@ def checkFile(*args):
         cmds.menuItem( p=objMenu, label= str(item))
     print(allrefObj)
 
+checkFile()
 
 def replaceRefer(*args):
     refObj = cmds.ls(sl= True)
