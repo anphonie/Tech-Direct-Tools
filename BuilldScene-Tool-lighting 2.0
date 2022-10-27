@@ -13,6 +13,7 @@ propres = []
 setres = []
 chares = []
 sqres = []
+wipres = []
 allrefObj = []
 verPath = ''
 setPiece_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/setPiece"
@@ -20,6 +21,7 @@ prop_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/prop"
 set_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/set"
 char_path = cmds.workspace(fullName=True) + "/scenes/publish/assets/character"
 sequence_path = cmds.workspace(fullName=True) + "/scenes/publish/sequence/lng01"
+wipsq_path = cmds.workspace(fullName=True) + "/scenes/wip/sequence/lng01"
 dsStore = "DS_Store"
 
 def findsetAss():    
@@ -60,7 +62,17 @@ def findseqAss():
     # check if current path is a file
         if os.path.isdir(os.path.join(sequence_path, path)):
             sqres.append(path)
-   
+            
+def findwipsqAss(*args):   
+    asNa = "lng01_010" 
+    true_path = wipsq_path + '/' + asNa + "/light/"
+    if (wipres is not None):
+        wipres.clear()
+    for path in os.listdir(true_path):
+    # check if current path is a file
+        if os.path.isfile(os.path.join(true_path, path)):
+            if (dsStore not in path):
+                wipres.append(path)  
    
 findsetAss()
 finpropAss()
@@ -68,6 +80,13 @@ finsetAss()
 fincharAss()
 findseqAss()
 
+def saveFile(*args):
+    asNa = "lng01_010"
+    findwipsqAss()
+    upVer = len(wipres) + 1
+    upverNo = "\n".join(["%03d" % upVer])
+    cmds.file(rename = wipsq_path + '/' + asNa + "/light/" + asNa + "_light.v" + upverNo) 
+    cmds.file(save=True,f=True)
  
 def referAss(*args):
     assName = cmds.optionMenu(setpieceMenu, q= True, v = True)
@@ -118,9 +137,10 @@ def referseqAss(*args):
     assName = cmds.optionMenu(seqMenu, q=True, v=True)
     temp_path = sequence_path + "\\" + assName + "\\animation\\cache\\alembic\\"
     temp_path2 = sequence_path + "\\" + assName + "\\layout\\cache\\alembic\\"
-   
+    saveFile(assName)
+    
     refersetAss("loungeRoom")
-   
+    
     for tpath in os.listdir(temp_path):
     # check if current path is a file
         if os.path.isfile(os.path.join(temp_path, tpath)):
@@ -133,6 +153,7 @@ def referseqAss(*args):
             templist2.append(tpath2)
     tempname2 = templist2[-1].split(".")
     cmds.file(temp_path2 + templist2[-1],  r=True, namespace = tempname2[0] + '_' + tempname2[1])
+    
     
     #print(templist)
 
@@ -276,7 +297,7 @@ with LayoutManager(cmds.columnLayout(adj=True, rowSpacing=5)) as col:
    
     for item in res:      
         cmds.menuItem( label= str(item))
-    cmds.button(label = 'Load Asset (Latest)', command = referAss)    
+    cmds.button(label = 'Load Asset (Latest)', command = findwipsqAss)    
     cmds.separator(h=20)
     
 cmds.showWindow('cTools')        
