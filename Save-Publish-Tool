@@ -197,10 +197,6 @@ def publish(*args):
             naming = objname + "_" + a + "_" + a + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()
 
     #WIP rig
     if "rig" in filepathname:
@@ -208,39 +204,32 @@ def publish(*args):
             naming = objname + "_" + "rigImportScene" + "_v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()
 
 
             if "_" and "_" and "rig" in filename:
                 naming = objname + "_" + filepathname + "_v" + version1(filename, "mayaBinary")
                 cmds.file(rename = pubFolderpath+ 'source/' + naming)
-                Savefile()
-                cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-                pubAlembicfile()
-                cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-                pubFBXfile()    
+                Savefile() 
 
         else:
             naming = objname + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pubAlembicfile()
-            cmds.file(rename = pubFolderpath+ 'cache/fbx/' + naming)
-            pubFBXfile()    
+
 
     # WIP sequence Animation
     if "sequence" in sequencePath and "animation" in filepathname:
             naming = upperPath + "_anim.v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            #cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
             pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
-            #pubAlembicfile()
+            #ABC export
+            needEx = "-sl -frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/animation/cache/alembic/lng01_010_anim.v00.abc'" 
+            pco.AbcExport(jobArg=needEx)
+            
+            pubAlembicfile()
+            Savefile2()
 
 
     #WIP sequence Layout 
@@ -248,17 +237,15 @@ def publish(*args):
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-                #FBX export 
+            #FBX export 
             pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
             
             #ABC export
-            
             needEx = "-sl -frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/layout/cache/alembic/lng01_010_layout.v003.abc'" 
             pco.AbcExport(jobArg=needEx)
             
             pubAlembicfile()
-            
             Savefile2()
             
             
@@ -267,10 +254,13 @@ def publish(*args):
             naming = upperPath + "_" + filepathname + ".v" + version1(filename, "mayaBinary")
             cmds.file(rename = pubFolderpath+ 'source/' + naming)
             Savefile()
-            #cmds.file(rename = pubFolderpath+ 'cache/alembic/' + naming)
-            pm.mel.FBXExport(f = pubFolderpath+ 'cache/fbx/'+ naming)
             pubFBXfile()
-            #pubAlembicfile()
+            #ABC export
+            needEx = "-sl -frameRange 1001 1050 -dataFormat ogawa -file 'C:/Users/Anthony/Documents/Assessment2_GroupX/scenes/publish/sequence/lng01/lng01_010/light/cache/alembic/lng01_010_light.v00.abc'" 
+            pco.AbcExport(jobArg=needEx)
+            
+            pubAlembicfile()
+            Savefile2()
     
     
 def version1(obj, type):
